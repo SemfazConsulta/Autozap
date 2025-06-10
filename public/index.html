@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Pedir Carne no Açougue</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>Pedir Carne no Açougue</h1>
+        <form id="formulario">
+            <label for="quantidade">Quantidade (kg):</label>
+            <input type="number" id="quantidade" min="1" required placeholder="Ex: 12" />
+            <button type="submit">Enviar Pedido</button>
+        </form>
+        <p class="message" id="msgConfirmacao">Pedido enviado com sucesso!</p>
+    </div>
+
+    <script>
+        const form = document.getElementById('formulario');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const quantidade = document.getElementById('quantidade').value;
+
+            await fetch('/enviar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quantidade })
+            });
+
+            alert('Pedido enviado!');
+        });
+    </script>
+</body>
+</html>
