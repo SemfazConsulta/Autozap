@@ -10,7 +10,7 @@ const PORT = 3000;
 // Dados da API do UltraMsg
 const INSTANCE_ID = 'instance124814';
 const TOKEN = 'sfi60ouwygayj2e2';
-const NUMERO_ACOUGUE = '5569992700080'; // Número fixo
+const NUMERO_ACOUGUE = '5569992254900'; // Número fixo
 
 const estoqueIdealPath = './estoque.json';
 
