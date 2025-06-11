@@ -9,7 +9,7 @@ const PORT = 3000;
 // Coloque aqui sua instância e token do UltraMsg
 const INSTANCE_ID = 'instance124814';
 const TOKEN = 'sfi60ouwygayj2e2';
-const NUMERO_ACOUGUE = '5569992700080'; // Exemplo: '5511999999999'
+const NUMERO_ACOUGUE = '5569992254900'; // Exemplo: '5511999999999'
 
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
