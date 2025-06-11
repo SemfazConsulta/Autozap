@@ -2,21 +2,61 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = 3000;
 
-// Coloque aqui sua instância e token do UltraMsg
+// Dados da API do UltraMsg
 const INSTANCE_ID = 'instance124814';
 const TOKEN = 'sfi60ouwygayj2e2';
-const NUMERO_ACOUGUE = '5569992254900'; // Exemplo: '5511999999999'
+const NUMERO_ACOUGUE = '5569992700080'; // Número fixo
+
+const estoqueIdealPath = './estoque.json';
 
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.post('/enviar', async (req, res) => {
-    const { quantidade } = req.body;
-    const mensagem = `Preciso de ${quantidade} kilos`;
+function carregarEstoque() {
+    if (!fs.existsSync(estoqueIdealPath)) {
+        fs.writeFileSync(estoqueIdealPath, JSON.stringify({
+            segunda: 200,
+            terca: 200,
+            quarta: 200,
+            quinta: 200,
+            sexta: 200,
+            sabado: 200,
+            domingo: 200
+        }, null, 2));
+    }
+    return JSON.parse(fs.readFileSync(estoqueIdealPath));
+}
+
+// Rota GET para obter o estoque ideal
+app.get('/estoque', (req, res) => {
+    const estoque = carregarEstoque();
+    res.json(estoque);
+});
+
+// Rota POST para atualizar o estoque ideal
+app.post('/estoque', (req, res) => {
+    fs.writeFileSync(estoqueIdealPath, JSON.stringify(req.body, null, 2));
+    res.send({ success: true });
+});
+
+// Rota POST para receber a sobra e calcular o pedido
+app.post('/consumo', async (req, res) => {
+    const { sobraHoje, diaSemana } = req.body;
+    const estoque = carregarEstoque();
+    const diasSemana = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+
+    const hojeIndex = diasSemana.indexOf(diaSemana);
+    const amanhaIndex = (hojeIndex + 1) % 7;
+    const diaAmanha = diasSemana[amanhaIndex];
+
+    const estoqueAmanha = estoque[diaAmanha] || 200;
+    const carneParaPedir = Math.max(estoqueAmanha - sobraHoje, 0);
+    const mensagem = `Preciso de ${carneParaPedir} kilos para ${diaAmanha}.`;
 
     try {
         await axios.post(`https://api.ultramsg.com/${INSTANCE_ID}/messages/chat`, {
@@ -25,7 +65,7 @@ app.post('/enviar', async (req, res) => {
             body: mensagem
         });
 
-        res.status(200).send({ success: true });
+        res.send({ success: true, carneParaPedir });
     } catch (error) {
         console.error('Erro ao enviar mensagem:', error.response?.data || error.message);
         res.status(500).send({ success: false });

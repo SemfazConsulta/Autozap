@@ -8,28 +8,91 @@
 <body>
     <div class="container">
         <h1>Pedir Carne no Açougue</h1>
+        
+        <p id="hojeInfo"><strong>Hoje é:</strong> <span id="diaAtual"></span></p>
+        <input type="hidden" id="diaSemana" />
+
+        <!-- FORMULÁRIO DE SOBRA -->
         <form id="formulario">
-            <label for="quantidade">Quantidade (kg):</label>
-            <input type="number" id="quantidade" min="1" required placeholder="Ex: 12" />
+            <label for="sobra">Sobra de hoje (kg):</label>
+            <input type="number" id="sobra" min="0" required placeholder="Ex: 200" />
             <button type="submit">Enviar Pedido</button>
         </form>
-        <p class="message" id="msgConfirmacao">Pedido enviado com sucesso!</p>
+
+        <!-- FORMULÁRIO PARA EDITAR ESTOQUE IDEAL -->
+        <h2>Estoque Ideal por Dia</h2>
+        <form id="estoqueForm">
+            <div class="estoque-lista" id="listaEstoque"></div>
+            <button type="submit">Salvar Estoque Ideal</button>
+        </form>
     </div>
 
     <script>
-        const form = document.getElementById('formulario');
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const quantidade = document.getElementById('quantidade').value;
+        const estoqueForm = document.getElementById('estoqueForm');
+        const listaEstoque = document.getElementById('listaEstoque');
 
-            await fetch('/enviar', {
+        const diaSemanaInput = document.getElementById('diaSemana');
+        const diaAtualSpan = document.getElementById('diaAtual');
+
+        const diasSemana = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+        const hoje = new Date();
+        const nomeDia = diasSemana[hoje.getDay()];
+
+        diaSemanaInput.value = nomeDia;
+        diaAtualSpan.textContent = nomeDia.charAt(0).toUpperCase() + nomeDia.slice(1);
+
+        async function carregarEstoque() {
+            const res = await fetch('/estoque');
+            const data = await res.json();
+            listaEstoque.innerHTML = '';
+            for (let dia in data) {
+                listaEstoque.innerHTML += `
+                    <label>
+                        ${dia.charAt(0).toUpperCase() + dia.slice(1)}:
+                        <input type="number" name="${dia}" value="${data[dia]}" required />
+                    </label>
+                `;
+            }
+        }
+
+        estoqueForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(estoqueForm);
+            const estoque = {};
+            for (let [dia, valor] of formData.entries()) {
+                estoque[dia] = parseFloat(valor);
+            }
+            await fetch('/estoque', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ quantidade })
+                body: JSON.stringify(estoque)
             });
-
-            alert('Pedido enviado!');
+            alert('Estoque atualizado!');
         });
+
+        document.getElementById('formulario').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const sobra = document.getElementById('sobra').value;
+            const diaSemana = document.getElementById('diaSemana').value;
+
+            const response = await fetch('/consumo', {
+              method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                sobraHoje: parseFloat(sobra),
+                diaSemana
+            })
+         });
+
+            const resultado = await response.json();
+            if (resultado.success) {
+                alert(`Pedido enviado: ${resultado.carneParaPedir} kg para amanhã.`);
+            } else {
+                alert('Erro ao enviar pedido.');
+            }
+        });
+
+        carregarEstoque();
     </script>
 </body>
 </html>
