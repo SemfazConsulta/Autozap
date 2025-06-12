@@ -8,8 +8,8 @@ const app = express();
 const PORT = 3000;
 
 // Dados da API do UltraMsg
-const INSTANCE_ID = 'instance124814';
-const TOKEN = 'sfi60ouwygayj2e2';
+const INSTANCE_ID = '';
+const TOKEN = '';
 const NUMERO_ACOUGUE = '556992254900'; // Número fixo
 
 const estoqueIdealPath = './estoque.json';
